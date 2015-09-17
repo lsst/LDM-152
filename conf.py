@@ -4,29 +4,43 @@
 # LDM-152: Data Management Middleware Design Sphinx configuration file
 
 import os
+import datetime
 
-# -- Project configurations --------------------------------------------------
+from yaml import load
 
-_doc_id = 'LDM-152'
-_doc_title = 'Data Management Middleware Design'
-project = '{0}: {1}'.format(_doc_id, _doc_title)
-copyright = '2015, AURA/LSST'
-author = 'AURA/LSST'
+# -- Ingest YAML metadata ----------------------------------------------------
+
+with open(os.path.join(os.path.dirname(__file__), 'metadata.yaml'), 'r') as f:
+    _metadata = load(f)
+
+project = '{0}: {1}'.format(_metadata['doc_id'], _metadata['doc_title'])
+author = ', '.join(_metadata['authors'])  # FIXME add oxford comma
+copyright = _metadata['copyright']
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = '10.0'
+version = _metadata['version']
 # The full version, including alpha/beta/rc tags.
-release = '10.0'
+if 'dev_version_suffix' in _metadata:
+    release = ''.join((version, _metadata['dev_version_suffix']))
+else:
+    release = version
 
-# There are two options for replacing |today|: either, you set today to some
-# non-false value, then it is used:
-# today = ''
-# Else, today_fmt is used as the format for a strftime call.
-# today_fmt = '%B %d, %Y'
+if 'last_revised' in _metadata:
+    today = _metadata['last_revised']
+else:
+    now = datetime.datetime.now()
+    now = now.replace(microsecond=0)
+    today = now.isoformat()
+
+# This is available to Jinja2 templates
+html_context = {'author_list': _metadata['authors'],
+                'doc_id': _metadata['doc_id'],
+                'doc_title': _metadata['doc_title'],
+                'last_revised': today}
 
 # -- General Sphinx configurations -------------------------------------------
 
@@ -100,7 +114,7 @@ html_theme_options = {}
 html_title = project
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-html_short_title = _doc_id
+html_short_title = _metadata['doc_id']
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
@@ -174,7 +188,8 @@ html_search_language = 'en'
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = '{0}_{1}'.format(_doc_id, _doc_title.replace(' ', '_'))
+htmlhelp_basename = '{0}_{1}'.format(_metadata['doc_id'],
+                                     _metadata['doc_title'].replace(' ', '_'))
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -197,7 +212,8 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc,
-     '{0}_{1}.tex'.format(_doc_id, _doc_title),
+     '{0}_{1}.tex'.format(_metadata['doc_id'],
+                          _metadata['doc_title'].replace(' ', '_')),
      project,
      author,
      'manual'),

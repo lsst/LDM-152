@@ -1,11 +1,5 @@
 .. sectnum::
 
-.. rubric:: LDM-152: Data Mangement Middleware Design
-
-Kian-Tat Lim, Ray Plante, Gregory Dubois-Felsmann
-
-Latest Revision: :ref:`October 10, 2013 <change-record>`.
-
 .. exec-summary:
 
 Executive Summary

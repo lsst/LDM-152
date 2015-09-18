@@ -1,3 +1,5 @@
+:tocdepth: 1
+
 .. sectnum::
 
 .. exec-summary:

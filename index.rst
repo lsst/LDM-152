@@ -2,7 +2,7 @@
 
 .. sectnum::
 
-.. exec-summary:
+.. _exec-summary:
 
 Executive Summary
 =================

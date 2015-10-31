@@ -286,6 +286,8 @@ expressions and time expressions applied to event data and metadata.
 .. figure:: _static/event_broker.png
    :alt: Event Subsystem Components.
 
+   Event Subsystem Components.
+
 .. _event-services-prototype:
 
 Prototype Implementation
@@ -326,18 +328,18 @@ The Orchestration Manager must be able to deploy pipelines and their
 associated configuration Policies onto one or more nodes in a cluster.
 Different pipelines may be deployed to different, although possibly
 overlapping, subsets of nodes. All three pipeline execution models (see
-:ref:`pipeline-framework`) must be supported. Sufficient provenance
-information must be captured to ensure that datasets can be reproduced
-from their inputs.
+:ref:`Pipeline Framework <pipeline-framework>`) must be supported.
+Sufficient provenance information must be captured to ensure that
+datasets can be reproduced from their inputs.
 
-The Orchestration Manager at the Base Center works with the DM Control
-System (DMCS, see :ref:`dmcs`) at that Center
-to accept commands from the OCS to enter various system modes such as
-Nightly Observing or Daytime Calibration. The DMCS invokes the
-Orchestration Manager to configure and execute data transfer and Alert
-Production pipelines accordingly. At the Archive Center, the
-Orchestration Manager controls execution of the Data Release Production,
-including managing data dependencies between pipelines.
+The Orchestration Manager at the Base Center works with the :ref:`Data
+Management Control System <dmcs>` (DMCS) at that Center to accept
+commands from the OCS to enter various system modes such as Nightly
+Observing or Daytime Calibration. The DMCS invokes the Orchestration
+Manager to configure and execute data transfer and Alert Production
+pipelines accordingly. At the Archive Center, the Orchestration Manager
+controls execution of the Data Release Production, including managing
+data dependencies between pipelines.
 
 Orchestration must detect failures, categorize them as permanent or
 possibly-transient, and restart transiently-failed processing according
@@ -405,6 +407,8 @@ adequate, as the idle time between execution of Tasks on a worker node
 was found to be less than 2 seconds, small in comparison with Task
 lengths on the order of minutes.
 
+.. [#f1] Document-15098, Summer 2013 Scalability Testing Report
+
 .. _dmcs:
 
 02C.07.01.01 Data Management Control System
@@ -431,9 +435,9 @@ verifies (again, at the application level) connectivity with the other
 sites including the Headquarters Site. It uses the System Administration
 Services from the infrastructure to monitor the operation of all
 hardware and integrates with the orchestration layer (see
-:ref:`processing-control`) to monitor software execution. System status
-and control functions will be available via a Web-enabled tool to the
-Headquarters Site and remote locations.
+:ref:`Processing Control <processing-control>`) to monitor software
+execution. System status and control functions will be available via a
+Web-enabled tool to the Headquarters Site and remote locations.
 
 In the production sequencing role, the DMCS has different
 responsibilities at each site.
@@ -660,7 +664,7 @@ environment, including the versions of software packages in use and
 machine information, or they can record a key tied to such environmental
 information that is provided by external middleware.
 
-Single Task (parallel mode) execution is supported by the `Inter-Process
+Single Task (parallel mode) execution is supported by the :ref:`Inter-Process
 Communication Services <ipms>`, which arrange to execute a
 Task's algorithm in parallel.
 
@@ -687,12 +691,14 @@ A second implementation has been developed in pure Python and used for
 several Data Challenges. This implementation is currently limited to the
 single-task serial and multiple-task batch modes of but it will be
 extended to use thread-based or MPI-based communication in the future as
-the `Inter-Process Communication Services <ipms>` are developed. This
+the :ref:`Inter-Process Communication Services <ipms>` are developed. This
 implementation is the basis for the refined baseline design. It solves
 the debugging issue by being able to be run under the Python debugger.
 Task startup overhead is greater in this implementation, but batching
 together processing of several datasets in a single Task overcomes this,
-as demonstrated in the latest Data Challenges [#f2]_.
+as demonstrated in the latest Data Challenges.\ [#f2]_
+
+.. [#f2] LDM-226 LSST Data Challenge Report, Summer 2012/Early Winter 2013 and Document-15098, op. cit.
 
 .. _logging:
 
@@ -732,7 +738,7 @@ Multiple LogDestination streams can be created and attached to Logs (and
 inherited in child Logs). Each such stream has its own importance
 threshold. LogRecords may also be formatted in different ways depending
 on the LogDestination. LogRecords may also be incorporated into Events
-(see :ref:`event-services`) and transmitted on a topic.
+(see :ref:`Event Services <event-services>`) and transmitted on a topic.
 
 Two sets of wrappers around the basic Log objects simplify logging
 start/stop timing messages and allow debug messages to be compiled out.
@@ -861,9 +867,3 @@ Change Record
 | 10          | 10/10/2013 | TCT                              | R Allsman    |
 +-------------+------------+----------------------------------+--------------+
 
-
-.. rubric:: Footnotes
-
-.. [#f1] Document-15098, Summer 2013 Scalability Testing Report
-
-.. [#f2] LDM-226 LSST Data Challenge Report, Summer 2012/Early Winter 2013 and Document-15098, op. cit.

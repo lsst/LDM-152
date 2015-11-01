@@ -1,93 +1,8 @@
-Large Synoptic Survey Telescope (LSST)
+:tocdepth: 1
 
-Data Management Middleware Design
+.. sectnum::
 
-Kian-Tat Lim, Ray Plante, Gregory Dubois-Felsmann
-
-LDM-152
-
-**Latest Revision: October 10, 2013**
-
-**This LSST document has been approved as a Content-Controlled Document
-by the LSST DM Technical Control Team. If this document is changed or
-superseded, the new document will retain the Handle designation shown
-above. The control is on the most recent digital document with this
-Handle in the LSST digital archive and not printed versions. Additional
-information may be found in the LSST DM TCT minutes.**
-
-Change Record
-
-+---------------+--------------+-----------------------------------------------------------------------------------------+------------------+
-| **Version**   | **Date**     | **Description**                                                                         | **Owner name**   |
-+===============+==============+=========================================================================================+==================+
-| 1.0           | 7/25/2011    | Initial version based on pre-existing UML models and presentations                      | Kian-Tat Lim     |
-+---------------+--------------+-----------------------------------------------------------------------------------------+------------------+
-| 2.0           | 5/22/2013    | Updated based on experience from prototypes and Data Challenges.                        | Kian-Tat Lim     |
-+---------------+--------------+-----------------------------------------------------------------------------------------+------------------+
-| 8             | 10/4/2013    | Updated based on comments from Process Control Review, changed to current terminology   | Kian-Tat Lim     |
-+---------------+--------------+-----------------------------------------------------------------------------------------+------------------+
-| 9             | 10/9/2013    | Further updates based on Process Control Review, formatting cleanup.                    | Kian-Tat Lim     |
-+---------------+--------------+-----------------------------------------------------------------------------------------+------------------+
-| 10            | 10/10/2013   | TCT approved                                                                            | R Allsman        |
-+---------------+--------------+-----------------------------------------------------------------------------------------+------------------+
-+---------------+--------------+-----------------------------------------------------------------------------------------+------------------+
-+---------------+--------------+-----------------------------------------------------------------------------------------+------------------+
-+---------------+--------------+-----------------------------------------------------------------------------------------+------------------+
-+---------------+--------------+-----------------------------------------------------------------------------------------+------------------+
-+---------------+--------------+-----------------------------------------------------------------------------------------+------------------+
-+---------------+--------------+-----------------------------------------------------------------------------------------+------------------+
-+---------------+--------------+-----------------------------------------------------------------------------------------+------------------+
-+---------------+--------------+-----------------------------------------------------------------------------------------+------------------+
-
-**Table of Contents**
-
-Change Record i
-
-1 Executive Summary 1
-
-2 Introduction 1
-
-3 02C.06.02.01 Data Access Client Framework 2
-
-3.1 Key Requirements 2
-
-3.2 Baseline Design 3
-
-3.3 Alternatives Considered 4
-
-3.4 Prototype Implementation 4
-
-4 02C.06.02.04 Image and File Services 4
-
-4.1 Baseline Design 5
-
-4.2 Prototype Implementation 5
-
-5 02C.07.02.01 Event Services 5
-
-5.1 Key Requirements 5
-
-5.2 Baseline Design 5
-
-5.3 Prototype Implementation 6
-
-6 02C.07.01 Processing Control 6
-
-6.1 02C.07.01.02 Orchestration Manager 6
-
-6.2 02C.07.01.01 Data Management Control System 8
-
-7 Pipeline Execution Services 9
-
-7.1 02C.06.03.01 Pipeline Construction Toolkit 9
-
-7.2 02C.06.03.02 Logging Services 12
-
-7.3 02C.06.03.03 Inter-Process Messaging Services 13
-
-7.4 02C.06.03.04 Checkpoint/Restart Services 14
-
-The LSST Data Management Middleware Design
+.. _exec-summary:
 
 Executive Summary
 =================
@@ -108,6 +23,8 @@ parameters rather than hard-coding. Middleware services enable
 efficient, managed replication of data over both wide area networks and
 local area networks.
 
+.. intro:
+
 Introduction
 ============
 
@@ -115,25 +32,25 @@ This document describes the baseline design of the LSST data access and
 processing middleware, including the following elements of the Data
 Management (DM) Construction Work Breakdown Structure (WBS):
 
--  02C.06.02.01 Data Access Client Framework
+-  :ref:`02C.06.02.01 Data Access Client Framework <dac-framework>`
 
--  02C.06.03 Pipeline Execution Services including:
+-  :ref:`02C.06.03 Pipeline Execution Services <pipeline-execution-services>` including:
 
-   -  02C.06.03.01 Pipeline Construction Toolkit
+   -  :ref:`02C.06.03.01 Pipeline Construction Toolkit <pipeline-construction-toolkit>`
 
-   -  02C.06.03.02 Logging Services
+   -  :ref:`02C.06.03.02 Logging Services <logging>`
 
-   -  02C.06.03.03 Inter-Process Communication Services
+   -  :ref:`02C.06.03.03 Inter-Process Communication Services <ipms>`
 
-   -  02C.06.03.04 Checkpoint/Restart Services
+   -  :ref:`02C.06.03.04 Checkpoint/Restart Services <checkpoint>`
 
--  02C.07.01 Processing Control including:
+-  :ref:`02C.07.01 Processing Control <processing-control>` including:
 
-   -  02C.07.01.01 Data Management Control System
+   -  :ref:`02C.07.01.01 Data Management Control System <dmcs>`
 
-   -  02C.07.01.02 Orchestration Manager
+   -  :ref:`02C.07.01.02 Orchestration Manager <orchestration-manager>`
 
--  02C.07.02.01 Event Services
+-  :ref:`02C.07.02.01 Event Services <event-services>`
 
 The LSST database design, WBS elements 02C.06.02.02 and 02C.06.02.03,
 may be found in the document entitled “Data Management Database Design”
@@ -144,9 +61,12 @@ are primarily low-level, off-the-shelf tools and are not described
 further here. 02C.07.02.06 (VO Interfaces) will use standard VO tools
 and protocols.
 
-|image0|
+.. _dms-arch:
 
-Figure . Data Management System Layers.
+.. figure:: _static/dms_arch.png
+   :alt: Data Management System Layers.
+
+   Data Management System Layers.
 
 Common to all aspects of the middleware design is an emphasis on
 flexibility through the use of abstract, pluggable interfaces controlled
@@ -158,6 +78,8 @@ require advances over the state of the art; instead, it requires
 abstraction to allow for future technological change and aggregation of
 tools to provide the necessary features.
 
+.. _dac-framework:
+
 02C.06.02.01 Data Access Client Framework
 =========================================
 
@@ -167,6 +89,8 @@ framework provides high-performance access to local resources (within a
 data access center, for example) and low-performance access to remote
 resources. These resources may include images, non-image files, and
 databases
+
+.. _dac-framework-key-reqs:
 
 Key Requirements
 ----------------
@@ -184,6 +108,8 @@ whether a given object is stored in a file or the database to be
 selected at runtime in a controlled manner. Image data must be able to
 be stored in standard FITS format, although the metadata for the image
 may be in either FITS headers or database table entries.
+
+.. _dac-framework-baseline:
 
 Baseline Design
 ---------------
@@ -243,6 +169,8 @@ type-specific template. Third, the Mapper allows camera-specific and
 repository-specific overrides and extensions to the list of rules and
 templates, enabling per-camera and dynamic dataset type creation.
 
+.. _dac-framework-alts:
+
 Alternatives Considered
 -----------------------
 
@@ -251,16 +179,21 @@ database was considered but determined to be too heavyweight and
 intrusive. Persistence from C++ was tried and found to be complex and
 unnecessary; Python persistence suffices since all control is in Python.
 
+.. _dac-framework-prototype:
+
 Prototype Implementation
 ------------------------
 
 A C++ implementation of the original design was created for Data
 Challenge 2 (DC2) that allows input and output of images and exposures,
 sources and objects, and PSFs. Datasets were identified by URLs. Storage
-mechanisms included FITS [1]_ files, Boost::serialization [2]_ streams
-(native and XML), and the MySQL [3]_ database (via direct API calls or
-via an intermediate, higher-performance, bulk-loaded tab-separated value
-file). The camera interface has not yet been prototyped.
+mechanisms included `FITS <http://fits.gsfc.nasa.gov/>`_ files,
+`Boost::serialization
+<http://www.boost.org/doc/libs/1_47_0/libs/serialization/doc/index.html>`_
+streams (native and XML), and the `MySQL <http://www.mysql.com/>`_
+database (via direct API calls or via an intermediate,
+higher-performance, bulk-loaded tab-separated value file).  The camera
+interface has not yet been prototyped.
 
 This implementation was extended in DC3 to include a Python-based
 version of the same design that uses the C++ implementation internally.
@@ -275,6 +208,8 @@ Further refinement of the implementation has produced classes that can
 be written to and read from FITS tables. The Mapper class has been
 extended to provide automatic management of dataset repositories.
 
+.. _image-file-services:
+
 02C.06.02.04 Image and File Services
 ====================================
 
@@ -283,6 +218,8 @@ including image files. This is required because the size of the LSST
 data products makes it infeasible to store them all; it is more
 cost-effective to provide the CPU cycles needed to regenerate them on
 demand.
+
+.. _image-file-services-baseline:
 
 Baseline Design
 ---------------
@@ -296,10 +233,14 @@ blocked.) The file is then regenerated by invoking application pipeline
 code based on provenance and metadata information stored in the
 repository. The regenerated file is placed in the cache.
 
+.. _image-file-services-prototype:
+
 Prototype Implementation
 ------------------------
 
 This service has not yet been prototyped.
+
+.. _event-services:
 
 02C.07.02.01 Event Services
 ===========================
@@ -308,6 +249,8 @@ The event service is used to communicate among components of the DM
 System, including between pipelines in a production. A monitoring
 component of the service can execute rules based on patterns of events,
 enabling fault detection and recovery.
+
+.. _event-services-key-reqs:
 
 Key Requirements
 ----------------
@@ -322,22 +265,30 @@ A monitoring component must be able to detect the absence of messages
 within a given time window and the presence of messages (such as logged
 exceptions) defined by a pattern.
 
+.. _event-services-baseline:
+
 Baseline Design
 ---------------
 
 The service will be built as a wrapper over a reliable messaging system
-such as Apache ActiveMQ [4]_. Event subclasses and standardized metadata
-will be defined in C++ and wrapped using SWIG [5]_ to make them
-accessible from Python. Events will be published to a topic; multiple
-receivers may subscribe to that topic to receive copies of the events.
+such as `Apache ActiveMQ <http://activemq.apache.org>`_. Event
+subclasses and standardized metadata will be defined in C++ and wrapped
+using `SWIG <http://www.swig.org>`_ to make them accessible from Python.
+Events will be published to a topic; multiple receivers may subscribe to
+that topic to receive copies of the events.
 
 The event monitor subscribes to topics that indicate faults or other
 system status. It can match templates to events, including boolean
 expressions and time expressions applied to event data and metadata.
 
-|image1|
+.. _fig-event-broker:
 
-Figure . Event Subsystem Components
+.. figure:: _static/event_broker.png
+   :alt: Event Subsystem Components.
+
+   Event Subsystem Components.
+
+.. _event-services-prototype:
 
 Prototype Implementation
 ------------------------
@@ -353,16 +304,22 @@ up to that level of performance.
 
 The event monitor has been prototyped in Java
 
-1. .. rubric:: 02C.07.01 Processing Control
-      :name: c.07.01-processing-control
+.. _processing-control:
 
-   1. .. rubric:: 02C.07.01.02 Orchestration Manager
-         :name: c.07.01.02-orchestration-manager
+02C.07.01 Processing Control
+============================
+
+.. _orchestration-manager:
+
+02C.07.01.02 Orchestration Manager
+----------------------------------
 
 The Orchestration Manager is responsible for deploying pipelines and
 Policies onto nodes, ensuring that their input data is staged
 appropriately, distributing dataset identifiers to be processed,
 recording provenance, and actually starting pipeline execution.
+
+.. _orchestration-manager-key-reqs:
 
 Key Requirements
 ~~~~~~~~~~~~~~~~
@@ -371,21 +328,24 @@ The Orchestration Manager must be able to deploy pipelines and their
 associated configuration Policies onto one or more nodes in a cluster.
 Different pipelines may be deployed to different, although possibly
 overlapping, subsets of nodes. All three pipeline execution models (see
-section 7.1.2) must be supported. Sufficient provenance information must
-be captured to ensure that datasets can be reproduced from their inputs.
+:ref:`Pipeline Framework <pipeline-framework>`) must be supported.
+Sufficient provenance information must be captured to ensure that
+datasets can be reproduced from their inputs.
 
-The Orchestration Manager at the Base Center works with the DM Control
-System (DMCS, see section 6.2) at that Center to accept commands from
-the OCS to enter various system modes such as Nightly Observing or
-Daytime Calibration. The DMCS invokes the Orchestration Manager to
-configure and execute data transfer and Alert Production pipelines
-accordingly. At the Archive Center, the Orchestration Manager controls
-execution of the Data Release Production, including managing data
-dependencies between pipelines.
+The Orchestration Manager at the Base Center works with the :ref:`Data
+Management Control System <dmcs>` (DMCS) at that Center to accept
+commands from the OCS to enter various system modes such as Nightly
+Observing or Daytime Calibration. The DMCS invokes the Orchestration
+Manager to configure and execute data transfer and Alert Production
+pipelines accordingly. At the Archive Center, the Orchestration Manager
+controls execution of the Data Release Production, including managing
+data dependencies between pipelines.
 
 Orchestration must detect failures, categorize them as permanent or
 possibly-transient, and restart transiently-failed processing according
 to the appropriate fault tolerance strategy.
+
+.. _orchestration-manager-baseline:
 
 Baseline Design
 ~~~~~~~~~~~~~~~
@@ -393,14 +353,15 @@ Baseline Design
 The design for the Orchestration Manager is a pluggable,
 configuration-controlled framework. Plug-in modules are used to
 configure and deploy pipelines on a variety of underlying process
-management technologies (such as simple ssh [6]_ or batch systems),
-which is necessary during design and development when hardware is
-typically borrowed rather than owned. For the operational system,
-HTCondor [7]_ is the selected process management technology. Additional
-modules capture hardware, software, and configuration provenance,
-including information about the execution nodes, the versions of all
-software packages, and the values of all configuration parameters for
-both middleware and applications.
+management technologies (such as simple `ssh <http://openssh.com/>`_ or
+batch systems), which is necessary during design and development when
+hardware is typically borrowed rather than owned. For the operational
+system, `HTCondor <http://research.cs.wisc.edu/htcondor/>`_ is the
+selected process management technology. Additional modules capture
+hardware, software, and configuration provenance, including information
+about the execution nodes, the versions of all software packages, and
+the values of all configuration parameters for both middleware and
+applications.
 
 The manager (or its underlying process management technology) monitors
 the availability of datasets and can trigger the execution of pipelines
@@ -412,11 +373,13 @@ Faults are detected by the pipeline harness and event monitor timeouts.
 Orchestration then reprocesses transiently-failed datasets.
 
 If technology advancement, performance, or community practice led us to
-change the process management technology, e.g. to something like Apache
-Hadoop [8]_, the orchestration manager plugins that handle task
-submission and data staging would need to be modified to submit task
-graphs under YARN and to rely on HDFS, respectively, but the underlying
-applications would not necessarily have to change.
+change the process management technology, e.g. to something like `Apache
+Hadoop <http://hadoop.apache.org/>`_, the orchestration manager plugins
+that handle task submission and data staging would need to be modified
+to submit task graphs under YARN and to rely on HDFS, respectively, but
+the underlying applications would not necessarily have to change.
+
+.. _orchestration-manager-prototype:
 
 Prototype Implementation
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -433,7 +396,7 @@ distribution, fault tolerance, and checkpoint/resume. The current
 prototype of the Orchestration Manager uses it to execute startup and
 shutdown code, distribute datasets to pipelines, group those datasets to
 ensure sufficient job length to amortize overheads, and automatically
-restart failed jobs. The Summer2013 Data Challenge [9]_ showed that
+restart failed jobs. The Summer 2013 Data Challenge [#f1]_ showed that
 HTCondor could execute Tasks at scales of up to 10,000 cores without
 bottlenecks. When starting pipelines on an empty cluster, as will be the
 case for the Alert Production, the Orchestration Manager was able to
@@ -444,6 +407,10 @@ adequate, as the idle time between execution of Tasks on a worker node
 was found to be less than 2 seconds, small in comparison with Task
 lengths on the order of minutes.
 
+.. [#f1] Document-15098, Summer 2013 Scalability Testing Report
+
+.. _dmcs:
+
 02C.07.01.01 Data Management Control System
 -------------------------------------------
 
@@ -451,6 +418,8 @@ The LSST Data Management System at each center will be monitored and
 controlled by a Data Management Control System (DMCS). The DMCS
 requirements and design are described more fully in “Automated Operation
 of the LSST Data Management System”, Document LDM-230.
+
+.. _dmcs-key-reqs:
 
 Key Requirements
 ~~~~~~~~~~~~~~~~
@@ -465,10 +434,10 @@ ensuring that each component is available for production use. It
 verifies (again, at the application level) connectivity with the other
 sites including the Headquarters Site. It uses the System Administration
 Services from the infrastructure to monitor the operation of all
-hardware and integrates with the orchestration layer (see section 6.1)
-to monitor software execution. System status and control functions will
-be available via a Web-enabled tool to the Headquarters Site and remote
-locations.
+hardware and integrates with the orchestration layer (see
+:ref:`Processing Control <processing-control>`) to monitor software
+execution. System status and control functions will be available via a
+Web-enabled tool to the Headquarters Site and remote locations.
 
 In the production sequencing role, the DMCS has different
 responsibilities at each site.
@@ -495,6 +464,8 @@ the level 3 data products compute cluster. It can be used to sequence
 Level 3 computations, in particular those that run on Data Release
 Production intermediate datasets.
 
+.. _dmcs-baseline:
+
 Baseline Design
 ~~~~~~~~~~~~~~~
 
@@ -515,6 +486,8 @@ data dependencies between tasks for the execution of the Data Release
 Production pipelines. Execution of these scripts will be triggered by
 OCS events, DM Events, or operator control.
 
+.. _dmcs-prototype:
+
 Prototype Implementation
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -523,16 +496,22 @@ automate execution of Data Challenge productions that are similar in
 scope to the Data Release Production. An off-the-shelf system-level
 monitoring solution is in place for the DM development cluster.
 
-1. .. rubric:: Pipeline Execution Services
-      :name: pipeline-execution-services
+.. _pipeline-execution-services:
 
-   1. .. rubric:: 02C.06.03.01 Pipeline Construction Toolkit
-         :name: c.06.03.01-pipeline-construction-toolkit
+Pipeline Execution Services
+===========================
+
+.. _pipeline-construction-toolkit:
+
+02C.06.03.01 Pipeline Construction Toolkit
+------------------------------------------
 
 The Pipeline Construction Toolkit provides a framework for packaging
 scientific algorithms into executable and reusable pipelines. It handles
 configuration, argument parsing, and interfacing with the I/O and
 inter-process communications mechanisms.
+
+.. _pipeline-config-framework:
 
 Configuration Framework
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -542,6 +521,8 @@ specify parameters for applications and middleware in a consistent,
 managed way. The use of this component facilitates runtime
 reconfiguration of the entire system while still ensuring consistency
 and the maintenance of traceable provenance.
+
+.. _pipeline-config-framework-key-reqs:
 
 Key Requirements
 ^^^^^^^^^^^^^^^^
@@ -568,6 +549,8 @@ It must be possible to save sufficient information about a configuration
 to obtain the value of any of its parameters as seen by the application
 code.
 
+.. _pipeline-config-framework-baseline:
+
 Baseline Design
 ^^^^^^^^^^^^^^^
 
@@ -592,6 +575,8 @@ and optionally ingested into a database for provenance purposes .A
 mechanism is provided to automatically translate between the Python
 configuration instance and a control object for C++ code.
 
+.. _pipeline-config-framework-prototype:
+
 Prototype Implementation
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -600,6 +585,8 @@ December 2011. It contains features such as selection of an algorithm by
 name from a registry, automatically pulling in the algorithm’s
 configuration. Tools are provided to print out the history of any
 parameter.
+
+.. _pipeline-framework:
 
 Pipeline Framework
 ~~~~~~~~~~~~~~~~~~
@@ -612,6 +599,8 @@ pipelines may be hierarchical, with a pipeline reused as a component in
 another pipeline. Branching and looping control flows may also be
 desirable. The pipeline framework provides the ability to create these
 pipelines.
+
+.. _pipeline-framework-key-reqs:
 
 Key Requirements
 ^^^^^^^^^^^^^^^^
@@ -640,8 +629,10 @@ The pipeline harness must support execution in three modes:
    different tasks. This mode is required for some types of Data Release
    processing.
 
-   1. .. rubric:: Baseline Design
-         :name: baseline-design-6
+.. _pipeline-framework-baseline:
+
+Baseline Design
+^^^^^^^^^^^^^^^
 
 The pipeline harness is comprised of Task objects. Tasks are simply
 Python scripts with a common base class. Using Python enables Tasks to
@@ -673,14 +664,16 @@ environment, including the versions of software packages in use and
 machine information, or they can record a key tied to such environmental
 information that is provided by external middleware.
 
-Single Task (parallel mode) execution is supported by the Inter-Process
-Communication Services (see section 7.3), which arrange to execute a
+Single Task (parallel mode) execution is supported by the :ref:`Inter-Process
+Communication Services <ipms>`, which arrange to execute a
 Task's algorithm in parallel.
 
 This design is a refinement of the original pipeline framework design,
 which described Pipelines composed of Stages communicating via a
 Clipboard. Tasks take the place of Stages; Command Line Tasks replace
 Pipelines; and the Clipboard is replaced by in-memory Python variables.
+
+.. _pipeline-framework-prototype:
 
 Prototype Implementations
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -698,18 +691,24 @@ A second implementation has been developed in pure Python and used for
 several Data Challenges. This implementation is currently limited to the
 single-task serial and multiple-task batch modes of but it will be
 extended to use thread-based or MPI-based communication in the future as
-the Inter-Process Communication Services are developed . This
+the :ref:`Inter-Process Communication Services <ipms>` are developed. This
 implementation is the basis for the refined baseline design. It solves
 the debugging issue by being able to be run under the Python debugger.
 Task startup overhead is greater in this implementation, but batching
 together processing of several datasets in a single Task overcomes this,
-as demonstrated in the latest Data Challenges [10]_.
+as demonstrated in the latest Data Challenges.\ [#f2]_
+
+.. [#f2] LDM-226 LSST Data Challenge Report, Summer 2012/Early Winter 2013 and Document-15098, op. cit.
+
+.. _logging:
 
 02C.06.03.02 Logging Services
 -----------------------------
 
 The logging service is used by application and middleware code to record
 status and debugging information.
+
+.. _logging-key-reqs:
 
 Key Requirements
 ~~~~~~~~~~~~~~~~
@@ -721,6 +720,8 @@ messages that are not produced to not add overhead. Logs must be able to
 be written to local disk files as well as sent via the event subsystem.
 Metadata about a component's context, such as a description of the CCD
 being processed, must be able to be attached to a log message.
+
+.. _logging-baseline:
 
 Baseline Design
 ~~~~~~~~~~~~~~~
@@ -737,10 +738,12 @@ Multiple LogDestination streams can be created and attached to Logs (and
 inherited in child Logs). Each such stream has its own importance
 threshold. LogRecords may also be formatted in different ways depending
 on the LogDestination. LogRecords may also be incorporated into Events
-(see section 5) and transmitted on a topic.
+(see :ref:`Event Services <event-services>`) and transmitted on a topic.
 
 Two sets of wrappers around the basic Log objects simplify logging
 start/stop timing messages and allow debug messages to be compiled out.
+
+.. _logging-prototype:
 
 Prototype Implementation
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -749,17 +752,21 @@ A prototype implementation was created in C++ for DC2; the debugging and
 logging components of that implementation were merged for DC3a. The C++
 interface is wrapped by SWIG into Python.
 
-A proof-of-concept implementation of much of the Logging Subsystem
-interface on top of Apache log4cxx [11]_ demonstrated that it is
-possible to use off-the-shelf tools to implement the design. An adapter
-would have to be written to enable log messages to be sent via the Event
-subsystem.
+A proof-of-concept implementation of much of the Logging Subsystem interface on
+top of Apache `log4cxx <http://logging.apache.org/log4cxx/index.html>`_
+demonstrated that it is possible to use off-the-shelf tools to implement the
+design. An adapter would have to be written to enable log messages to be sent
+via the Event subsystem.
+
+.. _ipms:
 
 02C.06.03.03 Inter-Process Messaging Services
 ---------------------------------------------
 
 Inter-Process Messaging Services are used to isolate the applications
 code from the details of the underlying communications mechanism.
+
+.. _ipms-key-reqs:
 
 Key Requirements
 ~~~~~~~~~~~~~~~~
@@ -772,19 +779,23 @@ geometry. It must be possible to send and receive objects, but
 transmission of complex data structures involving pointers is not
 required.
 
+.. _ipms-baseline:
+
 Baseline Design
 ~~~~~~~~~~~~~~~
 
 IPMS will be an abstract interface used by applications code implemented
-using two technologies: the Event subsystem and MPI [12]_. The former
-will typically be selected for general-purpose, low-volume
-communication, particularly when global publish/subscribe functionality
-is desired; the latter will be used for efficient, high-rate
-communication. A Command Line Task will call IPMS with a specification
-of its desired geometry in order to execute its algorithm in parallel.
-The algorithm will make explicit calls to IPMS to send data to and
-receive data from other instances of the task, including gather/scatter
-communication.
+using two technologies: the Event subsystem and `MPI
+<http://mpi-forum.org/>`_. The former will typically be selected for
+general-purpose, low-volume communication, particularly when global
+publish/subscribe functionality is desired; the latter will be used for
+efficient, high-rate communication. A Command Line Task will call IPMS
+with a specification of its desired geometry in order to execute its
+algorithm in parallel.  The algorithm will make explicit calls to IPMS
+to send data to and receive data from other instances of the task,
+including gather/scatter communication.
+
+.. _ipms-prototype:
 
 Prototype Implementation
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -794,12 +805,16 @@ written in the DC3 timeframe. An implementation of MPI communication for
 Tasks has been written by the Subaru Hyper Suprime-cam group but not yet
 merged back to the LSST stack.
 
+.. _checkpoint:
+
 02C.06.03.04 Checkpoint/Restart Services
 ----------------------------------------
 
 Checkpoint/Restart Services are used to pause the execution and save the
 state of long-running pipelines, to protect against failures and for
 resource management. They are also used to restart pipelines.
+
+.. _checkpoint-key-reqs:
 
 Key Requirements
 ~~~~~~~~~~~~~~~~
@@ -809,6 +824,8 @@ application code and restart it on the same or a similar computer.
 Providing a means for application code to explicitly save its state is
 also desirable
 
+.. _checkpoint-baseline:
+
 Baseline Design
 ~~~~~~~~~~~~~~~
 
@@ -817,47 +834,36 @@ sufficient baseline. The priority of these services has decreased as
 application algorithms have proven to be amenable to partitioning into
 smaller jobs that can be rerun in their entirety.
 
- Prototype Implementation
+.. _checkpoint-prototype:
+
+Prototype Implementation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This service has not yet been prototyped.
 
-.. [1]
-   `http://fits.gsfc.nasa.gov/ <../customXml/item1.xml>`__
+.. _change-record:
 
-.. [2]
-   `http://www.boost.org/doc/libs/1\_47\_0/libs/serialization/doc/index.html <numbering.xml>`__
+Change Record
+=============
 
-.. [3]
-   `http://www.mysql.com/ <styles.xml>`__
++-------------+------------+----------------------------------+--------------+
+| **Version** | **Date**   | **Description**                  | **Owner**    |
++=============+============+==================================+==============+
+| 1.0         | 7/25/2011  | Initial version based on         | Kian-Tat Lim |
+|             |            | pre-existing UML models          |              |
+|             |            | and presentations                |              |
++-------------+------------+----------------------------------+--------------+
+| 2.0         | 5/22/2013  | Updated based on experience from | Kian-Tat Lim |
+|             |            | prototypes and Data Challenges.  |              |
++-------------+------------+----------------------------------+--------------+
+| 8           | 10/4/2013  | Updated based on comments from   | Kian-Tat Lim |
+|             |            | Process Control Review, changed  |              |
+|             |            | to current terminology           |              |
++-------------+------------+----------------------------------+--------------+
+| 9           | 10/9/2013  | Further updates based on Process | Kian-Tat Lim |
+|             |            | Control Review, formatting       |              |
+|             |            | cleanup.                         |              |
++-------------+------------+----------------------------------+--------------+
+| 10          | 10/10/2013 | TCT                              | R Allsman    |
++-------------+------------+----------------------------------+--------------+
 
-.. [4]
-   `http://activemq.apache.org <settings.xml>`__
-
-.. [5]
-   `http://www.swig.org <webSettings.xml>`__
-
-.. [6]
-   `http://openssh.com/ <footnotes.xml>`__
-
-.. [7]
-   `http://research.cs.wisc.edu/htcondor/ <endnotes.xml>`__
-
-.. [8]
-   `http://hadoop.apache.org/ <media/image1.jpeg>`__
-
-.. [9]
-   Document-15098, Summer 2013 Scalability Testing Report
-
-.. [10]
-   LDM-226 LSST Data Challenge Report, Summer 2012/Early Winter 2013 and
-   Document-15098, op. cit.
-
-.. [11]
-   `http://logging.apache.org/log4cxx/index.html <header1.xml>`__
-
-.. [12]
-   `http://mpi-forum.org/ <footer1.xml>`__
-
-.. |image0| image:: media/image3.emf
-.. |image1| image:: media/image4.png

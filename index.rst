@@ -88,7 +88,7 @@ datasets from and persist datasets to file and database storage. This
 framework provides high-performance access to local resources (within a
 data access center, for example) and low-performance access to remote
 resources. These resources may include images, non-image files, and
-databases
+databases.
 
 .. _dac-framework-key-reqs:
 
@@ -107,7 +107,8 @@ is required to be flexible, allowing changes in file formats or even
 whether a given object is stored in a file or the database to be
 selected at runtime in a controlled manner. Image data must be able to
 be stored in standard FITS format, although the metadata for the image
-may be in either FITS headers or database table entries.
+may be in either FITS headers or database table entries. The framework
+should not be tightly coupled to any particular DBMS implementation.
 
 .. _dac-framework-baseline:
 
@@ -125,6 +126,12 @@ provides a high-level, general-purpose dataset and repository access
 interface and a “Mapper” that provides astronomy-specific and even
 camera-specific methods for naming, persisting, and retrieving datasets.
 Both are implemented in Python.
+
+In addition to Butler, a thin "Db" module is designed to provide
+RDBMS-agnostic access to database. The module relies on SQLAlchemy and
+delegates the work to the SQLAlchemy "engine". In addition a small set
+of convenience utilities is provides to simplify interactions with the
+database.
 
 The Butler (formerly known as a Persistence object) manages repositories
 of datasets which can be in files or in a database. The files may be
@@ -208,6 +215,38 @@ Further refinement of the implementation has produced classes that can
 be written to and read from FITS tables. The Mapper class has been
 extended to provide automatic management of dataset repositories.
 
+.. _web-services:
+
+02C.06.02.02 Web Services
+=========================
+
+This WBS element contains overall Framework for running Database, Metadata
+and Image Cutout Services, wrapped into a RESTful (or RESTful-like)
+WebService. The service will provide uniform access to all available
+database catalogs, images and metadata for Level 1, Level 2 and Level 3,
+and will complement "raw" access to the data, such as SQL in case of
+database, or access to images through Butler.
+
+.. _query-services:
+
+02C.06.02.03 Query Services
+===========================
+
+This WBS element includes work needed to come up with a DBMS that
+meets LSST user query analysis needs. Such DBMS should include
+standard off-the-shelf DBMS capabilities including advanced features
+such as scalability to petabytes, incremental scaling, parallel queries,
+shared scans, fault tolerance, resource management, as well as
+LSST-specific features such as efficient support for spatial and
+temporal data at scale.
+
+The work involves customizing, optimizing, improving and gluing together
+relevant components, building missing features, configuration files,
+unit tests, integration tests, and documentation. It also includes
+building tools for maintaining, configuring, and administering such system.
+
+Details of this work are covered in details in document LDM-135.
+
 .. _image-file-services:
 
 02C.06.02.04 Image and File Services
@@ -238,7 +277,23 @@ repository. The regenerated file is placed in the cache.
 Prototype Implementation
 ------------------------
 
-This service has not yet been prototyped.
+A first prototype of the Image Service service has been implemented
+in Summer 2015. It serves raw and coadd images from a predefined location,
+and is capable of stitching multiple images, including acrss track
+boundaries on demand.
+
+.. _catalog-services:
+
+02C.06.02.05 Catalog Services
+=============================
+
+This WBS element includes software programs, database tables, configuration
+files, unit tests, component integration tests, and documentation needed to
+build common RESTful-based services on top of all LSST database products
+(all levels, all metadata).
+
+It includes work on global metadata structures for all LSST data products,
+including all data releases, L3 user data and all images.
 
 .. _event-services:
 

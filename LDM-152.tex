@@ -198,9 +198,9 @@ must be low-overhead, allowing efficient use of available bandwidth. The
 interface to the I/O layer must be usable by application developers. It
 is required to be flexible, allowing changes in file formats or even
 whether a given object is stored in a file or the database to be
-selected at runtime in a controlled manner. Image data must be able to
-be stored in standard FITS format, although the metadata for the image
-may be in either FITS headers or database table entries.
+selected at runtime in a controlled manner. It must be possible to store
+image pixel data in a file while part or all of its metadata is stored
+in a different file or in a database table.
 
 \subsection{Baseline Design}\label{butler-design}
 

@@ -711,30 +711,15 @@ builds images, and sends them to the Archive Center for processing by the Alert 
 
 The Prompt Processing service is composed of a Data Management Control System
 (DMCS), a Foreman, and a set of Forwarders at the Base as well as a Foreman, a
-set of Distributors, and computational worker nodes at NCSA.  See Figures~\ref{fig:base-l1} and \ref{fig:ncsa-l1}.
-
-\begin{figure}
-\centering
-\includegraphics[width=\textwidth]{BaseL1.png}
-\caption{Base Level 1 Components}
-\label{fig:base-l1}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[width=\textwidth]{NCSAL1.png}
-\caption{NCSA Level 1 Components}
-\label{fig:ncsa-l1}
-\end{figure}
+set of Distributors, and computational worker nodes at NCSA.
 
 The Forwarders at the Base connect directly to the Camera Data System to obtain
 pixel data, one raft's worth of pixels per forwarder.  Fewer forwarders could
 be used if failures exhaust the available spares.  They merge these pixels with
 header metadata provided by the Base Foreman and transfer the resulting images
 to the NCSA Distributors.  The current design uses bbFTP to perform the
-transfer using a Forwarding Buffer to track transfers in progress. The Data
-Butler clients on the worker nodes pull the received images from the
-Distributors.
+transfer.  The Data Butler clients on the worker nodes pull the received images
+from the Distributors.
 
 The Foremen at the Base and NCSA track the status of their respective pools of
 Forwarders and Distributors and reallocate rafts as needed.  The Base Foreman

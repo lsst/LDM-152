@@ -254,6 +254,21 @@ type-specific template. Third, the Mapper allows camera-specific and
 repository-specific overrides and extensions to the list of rules and
 templates, enabling per-camera and dynamic dataset type creation.
 
+For LSST, the Mapper flexibility is used in several ways.  For precursor data,
+image files can retain the names they were assigned in the upstream archive,
+with templates being used to compute the filename from the values in the
+dictionary.  Metadata stored in a SQLite database within the repository allows
+more rapid listing of available datasets and expansion of partial key/value
+dictionaries.  Calibration data is associated with images by observation
+timestamp using validity ranges stored in an auxiliary SQLite database.  For
+LSST Data Release Production, the same mechanisms will be used to process data
+staged from the Data Backbone (DBB).  Direct access by the Data Butler to the
+Data Backbone (e.g. from the LSST Science Platform) will use DBB metadata
+tables directly.  The Mapper will produce logical file identifiers that the DBB
+converts to endpoint-local physical locations.  For LSST Alert Production, the
+Mapper will be configured to point to raft images on the distributor nodes and
+locally-cached calibration and template images.
+
 \subsection{Alternatives Considered}\label{alternatives-considered}
 
 Use of a full-fledged object-relational mapping system for output to a

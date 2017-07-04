@@ -133,7 +133,7 @@ Movement operations supported by the Data Backbone include:
 	\item Staging: data is copied in and out of the Data Backbone in coordination with an external management system; primarily used for workflow orchestration.
 	\item Caching: data location and lifetime is managed by policy; caches are populated by use.
 	\item Mirroring: 1:1 replication of data is dictated by policy.
-	\item Export: data is copied out of the Data Backbone to end users; 
+	\item Export: data is copied out of the Data Backbone to end users;
 \end{itemize}
 
 The Data Backbone does not include public access restrictions, responsibilities
@@ -624,18 +624,18 @@ storage for computation, such as curation storage to hold final data products
 also needed to completely execute a pipeline and completely realize the data
 handling scheme for input and output datasets; the Workload and Workflow
 component utilizes these as well.
- 
+
 Computing resources are physical items which are not always fit for use. They
 have scheduled and unscheduled downtimes and may have scheduled availability.
 The management of campaigns requires the detection of unscheduled downtimes of
 resources, recovery of executing pipelines affected by unscheduled downtimes,
-and arranging for the best use of available resources. 
- 
+and arranging for the best use of available resources.
+
 One class of potential resources are opportunistic resources which may be very
 capacious but may not guarantee that jobs run to completion. These resources
 may be needed in contingency circumstances. The workload management system is
 capable of differentiating ``kills'' from other failures so as to enable use of
-these resources. 
+these resources.
 
 \subsection{Workflow Management}\label{workflow-management}
 
@@ -649,7 +649,7 @@ pipelines.  Its basic functionality is as follows:
 			\item Produces condensed versions of database tables into portable lightweight format when required.
 			\item Deals with platform-specific edge services.
 			\item Handles identities and provides for local identity on the computing platforms.
-			\item Provides credentials and end-point information for any needed LSST services. 
+			\item Provides credentials and end-point information for any needed LSST services.
 		\end{itemize}
 	\item In-job context:
 		\begin{itemize}
@@ -666,7 +666,7 @@ pipelines.  Its basic functionality is as follows:
 			\item Transmits job status to workload management.
 		\end{itemize}
 \end{itemize}
- 
+
 The baseline design for the Workflow Management service uses a workflow tool
 such as Pegasus \citep{Pegasus} together with HTCondor \citep{HTCondor}, custom
 Activators, and Data Backbone interface scripts.

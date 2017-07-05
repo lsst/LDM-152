@@ -1,4 +1,4 @@
-\documentclass[DM,lsstdraft,toc]{lsstdoc}
+\documentclass[DM,toc]{lsstdoc}
 
 \title{Data Management Middleware Design}
 \setDocRef{LDM-152}
@@ -13,7 +13,7 @@
 \setDocCurator{Kian-Tat Lim}
 \setDocUpstreamLocation{\url{https://github.com/lsst/LDM-152}}
 
-\date{\today}
+\date{2017-07-05}
 \setDocAbstract{%
 The LSST middleware is designed to isolate scientific application pipelines
 and payloads,
@@ -40,7 +40,7 @@ local area networks.
 \addtohist{8}{2013-10-04}{Updated based on comments from Process Control Review, changed to current terminology}{Kian-Tat Lim}
 \addtohist{9}{2013-10-09}{Further updates based on Process Control Review, formatting cleanup.}{Kian-Tat Lim}
 \addtohist{10}{2013-10-10}{TCT}{R Allsman}
-\addtohist{draft}{2017-06-30}{Rewritten for Construction and Operations}{K-T Lim}
+\addtohist{11.0}{2017-07-05}{Rewritten for Construction and Operations. Approved in \href{https://jira.lsstcorp.org/browse/RFC-358}{RFC-358}.}{K-T Lim}
 }
 
 \begin{document}
@@ -736,7 +736,7 @@ The current design uses bbFTP to perform the transfer.  The Data Butler clients
 on the worker nodes pull the received images from the Distributors.
 
 The Foremen at the Base and NCSA track the status of their respective pools of
-Forwarders and Distributors and reallocate rafts as needed.  
+Forwarders and Distributors and reallocate rafts as needed.
 The NCSA Foreman arranges for
 the configured science payload to be executed on the worker nodes and collects
 image quality feedback, transferring it to the Telemetry Gateway service at the

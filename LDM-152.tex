@@ -131,7 +131,7 @@ Rucio \citep{Rucio} is being considered as an overall DBB system for files.
 The Data Backbone spans the Base Site, Archive Site, all Data Access Centers
 and all sites participating in annual data release processing.  Data products
 can enter the Data Backbone at any location as permitted by policy and are
-subject to timely distribution, access-latency guarantees and eviction as
+subject to timely distribution, access-latency guarantees, and eviction as
 defined by the policy. The Data Backbone provides data protection of data
 products while resident with the backbone.
 
@@ -147,19 +147,19 @@ The Data Backbone does not include public access restrictions, responsibilities
 regarding proprietary data periods or users with data access rights, or
 authorization or authentication of external users or services. This
 functionality is provided by layers on top of the Data Backbone, in the
-LSST Science Platform, Identity Management, and Bulk Distribution components.
+LSST Science Platform (LSP), Identity Management, and Bulk Distribution components.
 
 Tiers within the Data Backbone include a custodial store with assurance of
-data preservation and an access tier that may have lower latency.
+data preservation (e.g. tape but possibly other technologies) and an access tier that may have lower latency.
 
-File transport technologies such as Globus Transfer \citep{GlobusTransfer} with
-GridFTP and RESTful interfaces are being considered.
+Replication between sites and transfer to the custodial store is currently envisioned to be handled by layered utilities, so the DBB does not necessarily present a single-filesystem view.
+File transport technologies such as Globus Transfer \citep{GlobusTransfer} with GridFTP and RESTful interfaces are being considered.
 
 \subsection{Location and Metadata}\label{dbb-location-and-metadata}
 
 The Data Backbone tracks the locations of all replicas of data ingested into
 it, along with their metadata and provenance.  This information is stored in
-global, replicated database tables.
+global, replicated database tables that are part of the DBB.
 
 \subsection{Files}\label{dbb-files}
 
@@ -167,6 +167,7 @@ The Data Backbone holds all files that are part of the Science Image Archive,
 including raw data and processed data products, as well as additional files
 such as the Engineering and Facilities Database Large File Annex, files
 associated with the Calibration Database, etc.
+It is also currently envisioned to contain files representing the archival contents of the catalog data products, either canonical files that are ingested into database servers or backup files dumped from canonical databases.
 
 These files will be kept on a high-performance, scalable file store and
 archived in a reliable long-term file store.  The baseline design uses GPFS
@@ -178,22 +179,41 @@ future work remains in this area.
 
 \subsection{Databases}\label{dbb-databases}
 
-The Data Backbone holds all databases that are part of the Science Catalog
-Archive that is visible to data rights holders.  These include the Query Access
-(Level 2) Database (composed of Data Release catalogs and associated metadata
-as served by the Qserv software, described separately in \citeds{LDM-135}), the
-Calibration Database, the reformatted Engineering and Facility Database, and
-the (external-facing) Level 1 Database.
+The Data Backbone holds many databases that are part of the Science Catalog Archive that is visible to data rights holders.
+Exceptions are currently envisioned to include the large-scale Data Release (Level 2) catalogs that are loaded only into the Qserv software described separately in \citeds{LDM-135}, which are considered as outside the Data Backbone.
+The associated metadata will be part of the Data Backbone, even if it is also replicated into the Qserv software.
+The Calibration Database, the transformed Engineering and Facility Database, and the (external-facing) Level 1 Database are all currently envisioned to be part of the Data Backbone.
 
 Just like files, these databases need to be managed in terms of replication,
 disaster recovery, and lifetime.  The underlying mechanisms for data storage
 and transport and the interfaces to the data are significantly different,
 however.  Accordingly, all databases are stored in appropriate database
 management systems that provide their own native mechanisms for replication and
-backup.  These include the Qserv distributed database and an "off-the-shelf"
-relational database (for which MySQL/MariaDB \citep{MariaDB}, Oracle
-\citep{Oracle}, and Microsoft SQL Server \citep{SQLServer} are being
-evaluated).
+backup.
+These include an "off-the-shelf" relational database server (for which MySQL/MariaDB \citep{MariaDB}, Oracle \citep{Oracle}, and Microsoft SQL Server \citep{SQLServer} are being evaluated).
+A large instance of such a server is currently envisioned to be used as a "consolidated" database management system containing science data, metadata, provenance, and production tracking information, particularly for Level 2 Data Release Production.
+Additional databases such as the internal, Alert Production-only Level 1 database containing DIAObjects, DIASources, and DIAForcedSources; tracking information for the Level 1 Image Ingest and Processing system; or measurements for the Quality Control systems may reside in their own specialized storage outside the Data Backbone.
+
+\subsection{Interfaces}\label{dbb-interfaces}
+
+The primary access to the Data Backbone files is currently envisioned to be via mounted POSIX filesystems, but additional web service methods for retrieving files are contemplated.
+
+The primary access to the Data Backbone databases is via direct queries to the relevant database servers.
+For portability and future-proofing, such queries should typically be intermediated with a package such as SQLAlchemy so that the underlying database software can be changed.
+
+An ingest utility will transfer files into the Data Backbone and load their metadata and provenance into the appropriate DBB database tables.
+No file will be made available to be retrieved before its contents and metadata are complete.
+(It may be possible for file metadata to exist without file content if the fact that content does not yet exist or will never exist is recorded and made available along with the metadata.)
+
+Since the DBB file metadata tables are large, complex, and hosted on a consolidated database server instance, their service level is not currently envisioned to be guaranteed to be high enough to directly support observatory operational processes.
+Accordingly, ingestion of raw data from the LSSTCam, ComCam, and Auxiliary Telescope Spectrograph occurs from the Observatory Operations Data Service, which can maintain a higher level of availability and therefore act as an ingest buffer.
+
+Batch worker nodes should not expect to have direct access to DBB filesystems or the DBB databases.
+While exceptions could be made, none are currently envisioned.
+
+LSP instances, including Portal, JupyterLab, and Web API nodes, will have access to DBB filesystems (either through mounts or through web services) and direct client access to DBB databases.
+
+Since Science Pipelines codes will need to run in multiple environments including both batch worker nodes and LSP instances but also including development environments, they use the Data Butler (Section~\ref{data-butler-access-client}) to isolate themselves from the details of access interfaces.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

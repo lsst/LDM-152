@@ -208,9 +208,9 @@ standardized class entry points and conventions to organize low-level
 algorithms into potentially-reusable algorithmic components called Tasks.
 Sample Tasks might include dark frame subtraction, object detection, or object
 measurement.  The Framework organizes tasks into basic pipelines called
-SuperTasks.  Sample SuperTasks might include processing a single visit,
+PipelineTasks.  Sample PipelineTasks might include processing a single visit,
 building a coadd, or differencing a visit. The algorithmic code is written into
-(Super)Tasks by overriding classes and providing implementation for standard
+(Pipeline)Tasks by overriding classes and providing implementation for standard
 entry points. The Task Framework allows the pipelines to be constructed and run
 at the level of a single node or a group of tightly-synchronized nodes. It
 allows for sub-node parallelization: trivial parallelization of Task execution,
@@ -232,31 +232,31 @@ orchestration layer information on how to optimally run the particular task
 (i.e., which level of intra-node parallelization is desired).
 
 
-\subsection{SuperTask}\label{supertask}
+\subsection{PipelineTask}\label{pipelinetask}
 
-A SuperTask represents a unit of (generally transformational) work to be
+A PipelineTask represents a unit of (generally transformational) work to be
 performed on data.  Its primary responsibility is to provide the interface
 between Activators and Tasks.  In doing so, it separates input and output from
 computation, making Tasks more reusable and enabling data movement and other
-optimizations within a distributed execution environment.  The SuperTask also
+optimizations within a distributed execution environment.  The PipelineTask also
 exposes the kinds of data that it accepts and generates.  For example, a
-coaddition SuperTask might operate on a set of processed visit images and
+coaddition PipelineTask might operate on a set of processed visit images and
 produce a patch of a coadded image.  The specific data items to be processed
-are supplied through the Activator-SuperTask interface.  The goal of the
-design is that any SuperTask can be run in any computational environment,
+are supplied through the Activator-PipelineTask interface.  The goal of the
+design is that any PipelineTask can be run in any computational environment,
 from a laptop command line to the large-scale Data Release Production.
 
-In general a SuperTask receives the content of its inputs and produces its
+In general a PipelineTask receives the content of its inputs and produces its
 outputs by invoking the Data Butler.
 
-The SuperTask base class is a subclass of Task. This is so that SuperTask can
+The PipelineTask base class is a subclass of Task. This is so that PipelineTask can
 take advantage of the configuration mechanism for Tasks. The hierarchy of Tasks
 in a specific application therefore extends all the way up to the top-level
-SuperTask, and each level is addressable for configuration discovery and
+PipelineTask, and each level is addressable for configuration discovery and
 overrides.
 
-Each SuperTask implements a method that groups the input datasets into "quanta"
-that are the minimal units of work for an instance of the SuperTask and
+Each PipelineTask implements a method that groups the input datasets into "quanta"
+that are the minimal units of work for an instance of the PipelineTask and
 notifies the Activator of the outputs to be produced from each such unit of
 work.  It also implements a method to execute a computation on a single quantum
 of data, typically by retrieving the inputs from the Data Butler and executing
@@ -267,37 +267,37 @@ Datasets, as with the Data Butler, are specified by a set of key/value pairs,
 typically obtained by performing a database query on metadata tables, along
 with a label for the type of data (e.g. processed visit image).
 
-SuperTasks also expose their processing requirements to their Activators, such
+PipelineTasks also expose their processing requirements to their Activators, such
 as a need for multi-node communication or multi-core execution.
 
-SuperTask implementation is in the prototype stage.  The previous design and
-implementation combined the Activator and SuperTask functionality into a single
+PipelineTask implementation is in the prototype stage.  The previous design and
+implementation combined the Activator and PipelineTask functionality into a single
 class (\texttt{CmdLineTask}) that is now being replaced.
 
 \subsection{Activators}\label{activators}
 
 The Activator is responsible for providing a Butler instance for the
-SuperTask’s use. It is also responsible for instantiating the SuperTask to be
+PipelineTask’s use. It is also responsible for instantiating the PipelineTask to be
 run and for providing necessary inputs to the configuration parameter mechanism
-(see section~\ref{configuration}) for the SuperTask. For example, the “command
-line Activator” identifies the SuperTask to be run by name, locates and
+(see section~\ref{configuration}) for the PipelineTask. For example, the “command
+line Activator” identifies the PipelineTask to be run by name, locates and
 instantiates it, and provides for command-line overrides of config parameters
-of the SuperTask. It also creates a Butler based on one or more provided or
+of the PipelineTask. It also creates a Butler based on one or more provided or
 defaulted data repositories.
 
-An Activator is responsible for arranging for the execution of a SuperTask’s
+An Activator is responsible for arranging for the execution of a PipelineTask’s
 execution method one or more times over a set of dataset specifiers. Via
-collaboration with the SuperTask interfaces, the Activator is able to determine
+collaboration with the PipelineTask interfaces, the Activator is able to determine
 the parallelization and scatter-gather behavior that is permissible and/or
-required to implement the workflow defined by the SuperTask.
+required to implement the workflow defined by the PipelineTask.
 
 The Activator therefore controls the input/output data access environment as
-well as the computational environment of the SuperTask.  It is the plugin that
-enables SuperTask portability and reuse.
+well as the computational environment of the PipelineTask.  It is the plugin that
+enables PipelineTask portability and reuse.
 
 Specific Activators that are part of the design include a command line
 Activator and a workflow Activator that can be used to determine the data
-needed and produced by a SuperTask before its execution in order to configure
+needed and produced by a PipelineTask before its execution in order to configure
 data staging capabilities.
 
 Activator implementation is in the prototype stage.
@@ -453,7 +453,7 @@ implemented using two technologies: a message broker such as RabbitMQ
 \citep{RabbitMQ} and MPI \citep{MPI}. The former will typically be selected for
 general-purpose, low-volume communication, particularly when global
 publish/subscribe functionality is desired; the latter will be used for
-efficient, high-rate communication. A SuperTask will call the MultiNode API
+efficient, high-rate communication. A PipelineTask will call the MultiNode API
 with a specification of its desired geometry in order to execute its algorithm
 in parallel. The algorithm will make explicit use of the MultiNode API to send
 data to and receive data from other instances of the task, including

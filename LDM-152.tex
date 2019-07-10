@@ -513,7 +513,7 @@ hierarchically. Logging levels controlling which messages are produced
 must be configurable on a per-component level. There must be a way for
 messages that are not produced to not add significant overhead.
 Logs must be able to
-be written to local disk files as well as sent via the event subsystem.
+be written to local disk files to be gathered by a collection system.
 Metadata about a component's context, such as a description of the CCD
 being processed, must be able to be attached to a log message.
 
@@ -543,9 +543,6 @@ compatible access from Python.
 \texttt{log4cxx} provides for significant configurability of logs, including
 their destinations, message formatting, and thresholds, both through code and
 through external configuration files in either XML or Java property format.
-An adapter was written to enable log messages to be sent via ActiveMQ events,
-but this is not currently being used, as log collection mechanisms are
-adequate.
 
 
 \subsection{MultiNode API}\label{multinode-api}

@@ -1,4 +1,4 @@
-\documentclass[DM,toc]{lsstdoc}
+\documentclass[DM,lsstdraft,toc]{lsstdoc}
 
 \title{Data Management Middleware Design}
 \setDocRef{LDM-152}
@@ -13,7 +13,7 @@
 \setDocCurator{Kian-Tat Lim}
 \setDocUpstreamLocation{\url{https://github.com/lsst/LDM-152}}
 
-\date{2017-07-05}
+\date{\today}
 \setDocAbstract{%
 The LSST middleware is designed to isolate scientific application pipelines
 and payloads,
@@ -29,9 +29,7 @@ without changing code but also with full provenance to understand what
 environment and parameters were used to produce any dataset. It provides
 flexible, high-performance, low-overhead persistence and retrieval of
 datasets with data repositories and formats selected by external
-parameters rather than hard-coding. Middleware services enable
-efficient, managed replication of data over both wide area networks and
-local area networks.
+parameters rather than hard-coding.
 }
 
 \setDocChangeRecord{%
@@ -53,34 +51,22 @@ This document describes the baseline design of the LSST data access and
 processing middleware, including the following components:
 
 \begin{itemize}
-	\item Data Backbone
 	\item Data Butler Access Client
 	\item Task Framework
-	\item Workload/Workflow Management
-	\item Processing Control
 \end{itemize}
 
-The Data Backbone manages the storage of LSST data products.  The Data Butler
-Access Client provides a flexible interface for retrieving and persisting those
+The Data Butler
+Access Client provides a flexible interface for retrieving and persisting the LSST
 data products.  The Task Framework defines how scientific algorithms are
 packaged into pipelines, including how they are configured, how they use the
 Data Butler to access data, and how they execute on multiple nodes or cores.
-Workload and Workflow Management interfaces with the Task Framework to sequence
-the execution of dataflow graphs across one or more distributed computational
-environments.  Processing Control uses the Workload and Workflow Management
-tools to execute campaigns (applications of pipelines with specific
-configurations to sets of data) in an efficient, fault-tolerant manner while
-monitoring the state of execution.
 
 Common to all aspects of the middleware design is an emphasis on
 flexibility through the use of abstract, pluggable interfaces controlled
 by managed, user-modifiable parameters. In addition, the substantial
 computational and bandwidth requirements of the LSST Data Management
 System (DMS) force the designs to be conscious of performance,
-scalability, and fault tolerance. In most cases, the middleware does not
-require advances over the state of the art; instead, it requires
-abstraction to allow for future technological change and aggregation of
-tools to provide the necessary features.
+scalability, and fault tolerance.
 
 Requirements for the DMS Middleware are defined in \citeds{LDM-556}.
 
@@ -93,107 +79,6 @@ interact with each other.
 \caption{Data Management Middleware and Infrastructure}
 \label{fig:mwandinfra}
 \end{figure}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Data Backbone}\label{data-backbone}
-
-The Data Backbone (DBB) provides data management (storage, tracking, and
-replication) for LSST data products that reside in non-computational storage
-tiers.  It provides policy-defined operations for intra-site and inter-site
-data distribution, access latency requirements dependent upon the lifecycle of
-the data, data protection and recovery, data retention and eviction given
-cadences and predicted and observed on-demand usage, and efficient bulk recall
-of data which are spatially, temporally, or otherwise related in support of
-processing or export.  See Figure~\ref{fig:data-backbone}.
-
-\begin{figure}
-\centering
-\includegraphics[width=0.7\textwidth]{images/DataBackbone.pdf}
-\caption{Data Backbone}
-\label{fig:data-backbone}
-\end{figure}
-
-The Data Backbone serves as an abstraction against storage components whose
-similar requirements may otherwise have been met through duplication of effort
-during construction and operations. From the perspective of data producers and
-consumers, the Data Backbone provides a common, well-defined concept of how all
-participating storage components are expected to function, which greatly
-simplifies understanding of the system as opposed to understanding differing
-personalities of a large number of components.
-
-The Data Backbone links all of the computational enclaves and the Data Access
-Centers, acting as the spine that supports them all.
-
-Rucio \citep{Rucio} is being considered as an overall DBB system for files.
-
-\subsection{Replication and Transport}\label{dbb-replication-and-transport}
-
-The Data Backbone spans the Base Site, Archive Site, all Data Access Centers
-and all sites participating in annual data release processing.  Data products
-can enter the Data Backbone at any location as permitted by policy and are
-subject to timely distribution, access-latency guarantees and eviction as
-defined by the policy. The Data Backbone provides data protection of data
-products while resident with the backbone.
-
-Movement operations supported by the Data Backbone include:
-\begin{itemize}
-	\item Staging: data is copied in and out of the Data Backbone in coordination with an external management system; primarily used for workflow orchestration.
-	\item Caching: data location and lifetime is managed by policy; caches are populated by use.
-	\item Mirroring: 1:1 replication of data is dictated by policy.
-	\item Export: data is copied out of the Data Backbone to end users;
-\end{itemize}
-
-The Data Backbone does not include public access restrictions, responsibilities
-regarding proprietary data periods or users with data access rights, or
-authorization or authentication of external users or services. This
-functionality is provided by layers on top of the Data Backbone, in the
-LSST Science Platform, Identity Management, and Bulk Distribution components.
-
-Tiers within the Data Backbone include a custodial store with assurance of
-data preservation and an access tier that may have lower latency.
-
-File transport technologies such as Globus Transfer \citep{GlobusTransfer} with
-GridFTP and RESTful interfaces are being considered.
-
-\subsection{Location and Metadata}\label{dbb-location-and-metadata}
-
-The Data Backbone tracks the locations of all replicas of data ingested into
-it, along with their metadata and provenance.  This information is stored in
-global, replicated database tables.
-
-\subsection{Files}\label{dbb-files}
-
-The Data Backbone holds all files that are part of the Science Image Archive,
-including raw data and processed data products, as well as additional files
-such as the Engineering and Facilities Database Large File Annex, files
-associated with the Calibration Database, etc.
-
-These files will be kept on a high-performance, scalable file store and
-archived in a reliable long-term file store.  The baseline design uses GPFS
-\citep{GPFS} and HPSS \citep{HPSS}, but drawbacks to these have been
-identified.  Investigations of alternate storage technologies such as object
-stores (including Amazon Glacier \citep{AmazonGlacier}), Campaign Storage
-\citep{CampaignStorage}, and Quobyte \citep{Quobyte} have been performed, but
-future work remains in this area.
-
-\subsection{Databases}\label{dbb-databases}
-
-The Data Backbone holds all databases that are part of the Science Catalog
-Archive that is visible to data rights holders.  These include the Query Access
-(Level 2) Database (composed of Data Release catalogs and associated metadata
-as served by the Qserv software, described separately in \citeds{LDM-135}), the
-Calibration Database, the reformatted Engineering and Facility Database, and
-the (external-facing) Level 1 Database.
-
-Just like files, these databases need to be managed in terms of replication,
-disaster recovery, and lifetime.  The underlying mechanisms for data storage
-and transport and the interfaces to the data are significantly different,
-however.  Accordingly, all databases are stored in appropriate database
-management systems that provide their own native mechanisms for replication and
-backup.  These include the Qserv distributed database and an "off-the-shelf"
-relational database (for which MySQL/MariaDB \citep{MariaDB}, Oracle
-\citep{Oracle}, and Microsoft SQL Server \citep{SQLServer} are being
-evaluated).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -323,9 +208,9 @@ standardized class entry points and conventions to organize low-level
 algorithms into potentially-reusable algorithmic components called Tasks.
 Sample Tasks might include dark frame subtraction, object detection, or object
 measurement.  The Framework organizes tasks into basic pipelines called
-SuperTasks.  Sample SuperTasks might include processing a single visit,
+PipelineTasks.  Sample PipelineTasks might include processing a single visit,
 building a coadd, or differencing a visit. The algorithmic code is written into
-(Super)Tasks by overriding classes and providing implementation for standard
+(Pipeline)Tasks by overriding classes and providing implementation for standard
 entry points. The Task Framework allows the pipelines to be constructed and run
 at the level of a single node or a group of tightly-synchronized nodes. It
 allows for sub-node parallelization: trivial parallelization of Task execution,
@@ -347,31 +232,31 @@ orchestration layer information on how to optimally run the particular task
 (i.e., which level of intra-node parallelization is desired).
 
 
-\subsection{SuperTask}\label{supertask}
+\subsection{PipelineTask}\label{pipelinetask}
 
-A SuperTask represents a unit of (generally transformational) work to be
+A PipelineTask represents a unit of (generally transformational) work to be
 performed on data.  Its primary responsibility is to provide the interface
 between Activators and Tasks.  In doing so, it separates input and output from
 computation, making Tasks more reusable and enabling data movement and other
-optimizations within a distributed execution environment.  The SuperTask also
+optimizations within a distributed execution environment.  The PipelineTask also
 exposes the kinds of data that it accepts and generates.  For example, a
-coaddition SuperTask might operate on a set of processed visit images and
+coaddition PipelineTask might operate on a set of processed visit images and
 produce a patch of a coadded image.  The specific data items to be processed
-are supplied through the Activator-SuperTask interface.  The goal of the
-design is that any SuperTask can be run in any computational environment,
+are supplied through the Activator-PipelineTask interface.  The goal of the
+design is that any PipelineTask can be run in any computational environment,
 from a laptop command line to the large-scale Data Release Production.
 
-In general a SuperTask receives the content of its inputs and produces its
+In general a PipelineTask receives the content of its inputs and produces its
 outputs by invoking the Data Butler.
 
-The SuperTask base class is a subclass of Task. This is so that SuperTask can
+The PipelineTask base class is a subclass of Task. This is so that PipelineTask can
 take advantage of the configuration mechanism for Tasks. The hierarchy of Tasks
 in a specific application therefore extends all the way up to the top-level
-SuperTask, and each level is addressable for configuration discovery and
+PipelineTask, and each level is addressable for configuration discovery and
 overrides.
 
-Each SuperTask implements a method that groups the input datasets into "quanta"
-that are the minimal units of work for an instance of the SuperTask and
+Each PipelineTask implements a method that groups the input datasets into "quanta"
+that are the minimal units of work for an instance of the PipelineTask and
 notifies the Activator of the outputs to be produced from each such unit of
 work.  It also implements a method to execute a computation on a single quantum
 of data, typically by retrieving the inputs from the Data Butler and executing
@@ -382,37 +267,37 @@ Datasets, as with the Data Butler, are specified by a set of key/value pairs,
 typically obtained by performing a database query on metadata tables, along
 with a label for the type of data (e.g. processed visit image).
 
-SuperTasks also expose their processing requirements to their Activators, such
+PipelineTasks also expose their processing requirements to their Activators, such
 as a need for multi-node communication or multi-core execution.
 
-SuperTask implementation is in the prototype stage.  The previous design and
-implementation combined the Activator and SuperTask functionality into a single
+PipelineTask implementation is in the prototype stage.  The previous design and
+implementation combined the Activator and PipelineTask functionality into a single
 class (\texttt{CmdLineTask}) that is now being replaced.
 
 \subsection{Activators}\label{activators}
 
 The Activator is responsible for providing a Butler instance for the
-SuperTask’s use. It is also responsible for instantiating the SuperTask to be
+PipelineTask’s use. It is also responsible for instantiating the PipelineTask to be
 run and for providing necessary inputs to the configuration parameter mechanism
-(see section~\ref{configuration}) for the SuperTask. For example, the “command
-line Activator” identifies the SuperTask to be run by name, locates and
+(see section~\ref{configuration}) for the PipelineTask. For example, the “command
+line Activator” identifies the PipelineTask to be run by name, locates and
 instantiates it, and provides for command-line overrides of config parameters
-of the SuperTask. It also creates a Butler based on one or more provided or
+of the PipelineTask. It also creates a Butler based on one or more provided or
 defaulted data repositories.
 
-An Activator is responsible for arranging for the execution of a SuperTask’s
+An Activator is responsible for arranging for the execution of a PipelineTask’s
 execution method one or more times over a set of dataset specifiers. Via
-collaboration with the SuperTask interfaces, the Activator is able to determine
+collaboration with the PipelineTask interfaces, the Activator is able to determine
 the parallelization and scatter-gather behavior that is permissible and/or
-required to implement the workflow defined by the SuperTask.
+required to implement the workflow defined by the PipelineTask.
 
 The Activator therefore controls the input/output data access environment as
-well as the computational environment of the SuperTask.  It is the plugin that
-enables SuperTask portability and reuse.
+well as the computational environment of the PipelineTask.  It is the plugin that
+enables PipelineTask portability and reuse.
 
 Specific Activators that are part of the design include a command line
 Activator and a workflow Activator that can be used to determine the data
-needed and produced by a SuperTask before its execution in order to configure
+needed and produced by a PipelineTask before its execution in order to configure
 data staging capabilities.
 
 Activator implementation is in the prototype stage.
@@ -568,7 +453,7 @@ implemented using two technologies: a message broker such as RabbitMQ
 \citep{RabbitMQ} and MPI \citep{MPI}. The former will typically be selected for
 general-purpose, low-volume communication, particularly when global
 publish/subscribe functionality is desired; the latter will be used for
-efficient, high-rate communication. A SuperTask will call the MultiNode API
+efficient, high-rate communication. A PipelineTask will call the MultiNode API
 with a specification of its desired geometry in order to execute its algorithm
 in parallel. The algorithm will make explicit use of the MultiNode API to send
 data to and receive data from other instances of the task, including
@@ -600,171 +485,6 @@ threading at the Python level, it is anticipated that it will be implemented
 only at the C++ level and will likely use an existing API such as OpenMP
 \citep{OpenMP}.
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Workload/Workflow Management}\label{workload-workflow-management}
-
-The Workload and Workflow Management component provides management of the
-execution of science payloads ranging from a single pipeline to a series of
-``campaigns'', each consisting of multiple pipelines. Its services are able to
-handle massively distributed computing, executing jobs when their inputs become
-available and tracking their status and outputs. They ensure that the data
-needed for a job is accessible to it and that outputs (including log files, if
-any) are preserved. They can allocate work across multiple computing
-environments, in particular between NCSA and the Satellite Computing Facility
-at CC-IN2P3.
-
-This component invokes SuperTasks (section~\ref{supertask}) via Activators to
-sequence the execution of dataflow graphs across one or more distributed
-computational environments, in particular compute resources allocated via a
-batch computing service.
-
-\subsection{Batch Computing}\label{batch-computing}
-
-Batch computing occurs on LSST dedicated computing platforms at NCSA and
-CC-IN2P3 and potentially on other platforms. Resources other than local CPU and
-storage for computation, such as curation storage to hold final data products
-(the Data Backbone, section~\ref{data-backbone}) and network connectivity, are
-also needed to completely execute a pipeline and completely realize the data
-handling scheme for input and output datasets; the Workload and Workflow
-component utilizes these as well.
-
-Computing resources are physical items which are not always fit for use. They
-have scheduled and unscheduled downtimes and may have scheduled availability.
-The management of campaigns requires the detection of unscheduled downtimes of
-resources, recovery of executing pipelines affected by unscheduled downtimes,
-and arranging for the best use of available resources.
-
-One class of potential resources are opportunistic resources which may be very
-capacious but may not guarantee that jobs run to completion. These resources
-may be needed in contingency circumstances. The workload management system is
-capable of differentiating ``kills'' from other failures so as to enable use of
-these resources.
-
-\subsection{Workflow Management}\label{workflow-management}
-
-The Workflow Management service provides for orchestration and execution of
-pipelines.  Its basic functionality is as follows:
-\begin{itemize}
-	\item Pre-job context:
-		\begin{itemize}
-			\item Supports pre-handling of any input pipeline data sets when in-job context for input data is not required.
-			\item Pre-stages input data into a platform’s storage system, if available.
-			\item Produces condensed versions of database tables into portable lightweight format when required.
-			\item Deals with platform-specific edge services.
-			\item Handles identities and provides for local identity on the computing platforms.
-			\item Provides credentials and end-point information for any needed LSST services.
-		\end{itemize}
-	\item In-job context:
-		\begin{itemize}
-			\item Provides stage-in for any in-job pipeline input data sets.
-			\item Provides any Butler configurations necessarily provided from in-job context.
-			\item Invokes the pipeline and collects pipeline output status and other operational data.
-			\item Provides stage-out for pipeline output data sets when stage-out requires job context.
-		\end{itemize}
-	\item Post-job context:
-		\begin{itemize}
-			\item Ingests any designated data into database tables.
-			\item Arranges for any post-job stage out from cluster file systems.
-			\item Arranges for detailed ingest into custodial data systems.
-			\item Transmits job status to workload management.
-		\end{itemize}
-\end{itemize}
-
-The baseline design for the Workflow Management service uses a workflow tool
-such as Pegasus \citep{Pegasus} together with HTCondor \citep{HTCondor}, custom
-Activators, and Data Backbone interface scripts.
-
-\subsection{Workload Management}\label{workload-management}
-
-Workload Management considers the ensemble of available compute resources and
-the ensemble of campaigns to be executed and dispatches pipeline invocations to
-the Workload orchestration system based on resource availability and campaign
-priority.  It considers pipeline failures reported by the Workload
-orchestration system, distinguishing errors from computing resources and
-computational errors where possible, and arranges for incident reports and
-retrying failed invocations when appropriate.  It exposes the progress of each
-campaign to operations staff and monitoring systems, providing appropriate
-logging and events.
-
-This service has not yet been prototyped.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{Processing Control}\label{processing-control}
-
-Processing Control provides the highest-level services that manage the
-execution of scientific payloads within the DMS.  There are three main
-productions that occur on differing cadences:
-\begin{itemize}
-	\item Prompt Processing (nightly/daily)
-	\item Template and Calibration Products Production Execution (daily/weekly/annual)
-	\item Data Release Production Execution (annual)
-\end{itemize}
-as well as an \textit{ad hoc} OCS-Controlled Batch processing service.
-
-The Production Execution services are primarily managing submissions of
-campaigns at appropriate times and with appropriate configurations to the
-Workload and Workflow Management component.  Prompt Processing and
-OCS-Controlled Batch, however, involve custom interaction and control code in
-order to work closely with the Observatory Control System (OCS).
-
-\subsection{Prompt Processing}\label{prompt-processing}
-
-The Prompt Processing service retrieves pixel data from the main LSST camera,
-builds images, and sends them to the Archive Center for processing by the Alert Production payload or the Raw Calibration Validation payload.
-
-The Prompt Processing service is composed of a Data Management Control System
-(DMCS), a Foreman, and a set of Forwarders at the Base as well as a Foreman, a
-set of Distributors, and computational worker nodes at NCSA.  See Figure~\ref{fig:iipsystem}.
-
-\begin{figure}
-\centering
-\includegraphics[width=\textwidth]{images/IIPDiagram.png}
-\caption{Image Ingest and Processing System}
-\label{fig:iipsystem}
-\end{figure}
-
-The Forwarders at the Base connect directly to the Camera Data System to obtain
-pixel data, one raft's worth of pixels per forwarder.  Fewer forwarders could
-be used if failures exhaust the available spares.  They merge these pixels with
-header metadata and transfer the resulting images to the NCSA Distributors.
-The current design uses bbFTP to perform the transfer.  The Data Butler clients
-on the worker nodes pull the received images from the Distributors.
-
-The Foremen at the Base and NCSA track the status of their respective pools of
-Forwarders and Distributors and reallocate rafts as needed.
-The NCSA Foreman arranges for
-the configured science payload to be executed on the worker nodes and collects
-image quality feedback, transferring it to the Telemetry Gateway service at the
-base for reporting to the OCS.
-
-The DMCS is responsible for interfacing with the OCS as a commandable SAL
-(OCS Software Abstraction Layer)
-component as defined in \citeds{LSE-209} and \citeds{LSE-70}.  It accepts
-commands from the OCS to configure, start, and stop prompt processing (as well
-as several other OCS-related services) and communicates with the Base and NCSA
-Foremen to do so.  Note that the service operates in a data-driven mode; no
-explicit OCS commands are given to process each image.
-
-This system has been prototyped extensively in the \texttt{ctrl\_iip} package
-and is being used for integration tests with other LSST subsystems.
-
-\subsection{OCS-Controlled Batch}\label{ocs-controlled-batch}
-
-The OCS-Controlled Batch Service provides the ability for OCS scripts to
-initiate processing at NCSA using data that is already in the Data Backbone
-with results returned to the Data Backbone and accessible in the usual manner
-of the project’s data.  One major use of this is to execute a daily calibration
-update payload upon completion of the day's calibration image acquisitions.
-
-The OCS-Controlled Batch service works more simply than the Prompt Processing
-service.  The DMCS accepts commands from the OCS that refer to a pre-existing
-library of available pipelines (SuperTasks).  It submits jobs to the Workflow
-management system at NCSA to execute these on data that resides within the Data
-Backbone.  Job completion and status notifications are returned to the OCS.
-
-This service has not yet been prototyped.
 
 \section{References\label{references}}
 \renewcommand{\refname}{}
